@@ -1,0 +1,3 @@
+/home/joshua/Programs/C/Metronome/build/CMakeFiles/metronome.dir
+/home/joshua/Programs/C/Metronome/build/CMakeFiles/edit_cache.dir
+/home/joshua/Programs/C/Metronome/build/CMakeFiles/rebuild_cache.dir

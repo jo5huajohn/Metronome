@@ -1,0 +1,1 @@
+/usr/bin/cc CMakeFiles/metronome.dir/metronome.c.o -o metronome 
