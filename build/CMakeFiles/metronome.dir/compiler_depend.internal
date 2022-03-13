@@ -4,6 +4,7 @@
 CMakeFiles/metronome.dir/metronome.c.o
  /home/joshua/Programs/C/Metronome/metronome.c
  /usr/include/stdc-predef.h
+ /usr/lib/gcc/x86_64-pc-linux-gnu/11.2.0/include/stdbool.h
  /usr/lib/gcc/x86_64-pc-linux-gnu/11.2.0/include/stdint.h
  /usr/include/stdint.h
  /usr/include/bits/libc-header-start.h

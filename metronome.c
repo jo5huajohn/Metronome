@@ -1,3 +1,4 @@
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -23,63 +24,148 @@
 #define ONE_SEC_IN_NANOSECS     1e9
 #define SUB_DIV_DIVIDER         4
 
-int8_t metronome(char *time_signature, uint16_t bpm, uint8_t sub_div);
+typedef struct metronome {
+    char *time_signature;
+    uint8_t sub_div;
+    uint16_t bpm;
+} metronome_config_t;
+
+int8_t metronome_init(metronome_config_t *metronome_config);
+int8_t metronome(metronome_config_t *metronome_config);
 
 int main(int argc, char *argv[])
 {
-    char default_time_signature[] = DEFAULT_TIME_SIGNATURE;
-    char *time_signature = default_time_signature;
     int8_t res = 0;
-    uint8_t sub_div = DEFAULT_SUB_DIV;
-    uint16_t bpm = DEFAULT_BPM;
     
+    metronome_config_t metronome_config;
+
+    memset(&metronome_config, 0, sizeof(metronome_config));
+
     if (argc != 1)
     {
         if (argc == 4)
         {
-            sub_div = (uint8_t)atof(argv[3]);
+            metronome_config.sub_div = (uint8_t)atof(argv[3]);
         }
 
-        bpm = (uint16_t)atof(argv[2]);
-        time_signature = argv[1];
+        metronome_config.bpm = (uint16_t)atof(argv[2]);
+        metronome_config.time_signature = argv[1];
     }
 
-    res = metronome(time_signature, bpm, sub_div);
+    if ((res = metronome_init(&metronome_config)) != 0)
+    {
+        return res;
+    }
+
+    res = metronome(&metronome_config);
 
     return res;
 }
 
-int8_t metronome(char *time_signature, uint16_t bpm, uint8_t sub_div)
+int8_t metronome_init(metronome_config_t *metronome_config)
 {
-    if (bpm < MIN_BPM)
+    bool previous_config_found = false;
+    bool new_config_provided = false;
+    char default_time_signature[] = DEFAULT_TIME_SIGNATURE;
+    FILE *fp;
+
+    new_config_provided = ((metronome_config->bpm != 0) && (metronome_config->time_signature != NULL)) ? true : false;
+
+    fp = fopen("data/config", "r");
+    previous_config_found = (fp != NULL) ? true : false;
+
+    if (!new_config_provided && !previous_config_found)
+    {
+        system("mkdir data");
+        metronome_config->time_signature = default_time_signature;
+        metronome_config->bpm = DEFAULT_BPM;
+        metronome_config->sub_div = DEFAULT_SUB_DIV;
+    }
+
+    else if (!new_config_provided && previous_config_found)
+    {
+        char *buff = NULL;
+        size_t len = 0;
+
+        getline(&buff, &len, fp);
+        buff[strcspn(buff, "\n")] = '\0';
+        metronome_config->time_signature = strdup(buff);
+        getline(&buff, &len, fp);
+        buff[strcspn(buff, "\n")] = '\0';
+        metronome_config->bpm = atoi(strdup(buff));
+        getline(&buff, &len, fp);
+        buff[strcspn(buff, "\n")] = '\0';
+        metronome_config->sub_div = atoi(buff);
+
+        free(buff);
+        fclose(fp);
+    }
+
+    else if ((new_config_provided && !previous_config_found) || (new_config_provided && previous_config_found))
+    {
+        if (!previous_config_found)
+        {
+            system("mkdir data");
+        }
+
+        if (metronome_config->sub_div == 0)
+        {
+            metronome_config->sub_div = DEFAULT_SUB_DIV;
+        }
+
+        if (previous_config_found)
+        {
+            fclose(fp);
+        }
+
+        fp = fopen("data/config", "w+");
+
+        if (fp == NULL)
+        {
+            return -1;
+        }
+
+        fprintf(fp, "%s\n", metronome_config->time_signature);
+        fprintf(fp, "%d\n", metronome_config->bpm);
+        fprintf(fp, "%d", metronome_config->sub_div);
+
+        fclose(fp);
+    }
+
+    return 0;
+}
+
+int8_t metronome(metronome_config_t *metronome_config)
+{
+    if (metronome_config->bpm < MIN_BPM)
     {
         printf("BPM too low\n");
 
         return -1;
     }
 
-    else if (bpm > MAX_BPM)
+    else if (metronome_config->bpm > MAX_BPM)
     {
         printf("BPM too high\n");
 
         return -1;
     }
 
-    if (sub_div < MIN_SUB_DIV)
+    if (metronome_config->sub_div < MIN_SUB_DIV)
     {
         printf("Not enough sub-divisions\n");
 
         return -1;
     }
     
-    else if (sub_div > MAX_SUB_DIV)
+    else if (metronome_config->sub_div > MAX_SUB_DIV)
     {
         printf("Too many sub-divisions\n");
 
         return -1;
     }
 
-    uint8_t top = (uint8_t)atof(strtok(time_signature, "/"));
+    uint8_t top = (uint8_t)atof(strtok(metronome_config->time_signature, "/"));
     uint8_t bottom = (uint8_t)atof(strtok(NULL, "/"));
 
     if ((top < MIN_NO_OF_BEATS) || (bottom < MIN_VALUE_OF_BEATS))
@@ -96,7 +182,7 @@ int8_t metronome(char *time_signature, uint16_t bpm, uint8_t sub_div)
         return -1;
     }
 
-    uint32_t tick = ((ONE_MIN_IN_NANOSECS / bpm / (sub_div / SUB_DIV_DIVIDER)));
+    uint32_t tick = ((ONE_MIN_IN_NANOSECS / metronome_config->bpm / (metronome_config->sub_div / SUB_DIV_DIVIDER)));
 
     struct timespec tim, tim_rem;
 
@@ -113,7 +199,7 @@ int8_t metronome(char *time_signature, uint16_t bpm, uint8_t sub_div)
         tim.tv_nsec = tick;
     }
 
-    printf("Time Signature: %d/%d, BPM: %d Sub-division: %d\n", top, bottom, bpm, sub_div);
+    printf("Time Signature: %d/%d, BPM: %d Sub-division: %d\n", top, bottom, metronome_config->bpm, metronome_config->sub_div);
 
     while (1)
     {
@@ -121,7 +207,7 @@ int8_t metronome(char *time_signature, uint16_t bpm, uint8_t sub_div)
         for (uint8_t i = 1; i <= top; i++)
         {
             /* To handle the sub-divisions as inputted by the user */
-            for (uint8_t j = 1; j <= (sub_div / 4); j++)
+            for (uint8_t j = 1; j <= (metronome_config->sub_div / 4); j++)
             {
                 printf("%d ", i);
                 fflush(stdout);

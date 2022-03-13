@@ -3,6 +3,7 @@
 
 CMakeFiles/metronome.dir/metronome.c.o: ../metronome.c \
   /usr/include/stdc-predef.h \
+  /usr/lib/gcc/x86_64-pc-linux-gnu/11.2.0/include/stdbool.h \
   /usr/lib/gcc/x86_64-pc-linux-gnu/11.2.0/include/stdint.h \
   /usr/include/stdint.h \
   /usr/include/bits/libc-header-start.h \
@@ -116,11 +117,11 @@ CMakeFiles/metronome.dir/metronome.c.o: ../metronome.c \
 
 /usr/include/bits/wchar.h:
 
-/usr/include/bits/byteswap.h:
-
 /usr/include/bits/getopt_core.h:
 
 /usr/include/bits/types.h:
+
+/usr/lib/gcc/x86_64-pc-linux-gnu/11.2.0/include/stdbool.h:
 
 /usr/include/bits/waitflags.h:
 
@@ -135,6 +136,12 @@ CMakeFiles/metronome.dir/metronome.c.o: ../metronome.c \
 /usr/include/bits/endian.h:
 
 /usr/include/bits/timesize.h:
+
+/usr/include/string.h:
+
+/usr/include/bits/time64.h:
+
+/usr/include/bits/byteswap.h:
 
 /usr/include/bits/libc-header-start.h:
 
@@ -155,10 +162,6 @@ CMakeFiles/metronome.dir/metronome.c.o: ../metronome.c \
 /usr/include/bits/uintn-identity.h:
 
 /usr/include/bits/typesizes.h:
-
-/usr/include/bits/time64.h:
-
-/usr/include/string.h:
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/11.2.0/include/stdint.h:
 
