@@ -1,48 +1,66 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include <unistd.h>
 
-void metronome(int top, int bottom, int bpm, int subdiv);
+void metronome(char *time_signature, int bpm, int sub_div);
 
 int main(int argc, char *argv[])
 {
-    if (strcmp(argv[1], "-h") == 0)
+    int sub_div = 4;
+
+    if (argc == 4)
     {
+        sub_div = atoi(argv[3]);
     }
 
-    else if (argc == 4)
-    {
-        int top = atoi(strtok(argv[1], "/"));
-        int bottom = atoi(strtok(NULL, "/"));
-        int bpm = atoi(argv[2]);
-        int subdiv = atoi(argv[3]);
-
-        if (bpm > 400)
-        {
-            printf("BPM too high\n");
-            return -1;
-        }
-
-        metronome(top, bottom, bpm, subdiv);
-    }
+    int bpm = atoi(argv[2]);
     
+    if (bpm > 400)
+    {
+        printf("BPM too high\n");
+        return -1;
+    }
+
+    metronome(argv[1], bpm, sub_div);
+
     return 0;
 }
 
-void metronome(int top, int bottom, int bpm, int subdiv)
+void metronome(char *time_signature, int bpm, int sub_div)
 {
+    int top = atoi(strtok(time_signature, "/"));
+    int bottom = atoi(strtok(NULL, "/"));
+    long tick = ((60000 / bpm / (sub_div / 4)) * 1000000);
+
+    struct timespec tim, tim_rem;
+
+    memset(&tim, 0, sizeof(tim));
+
+    if (tick == 1000000000)
+    {
+        tim.tv_sec = 1;
+    }
+
+    else
+    {
+        tim.tv_nsec = tick;
+    }
+
     printf("%d/%d, BPM: %d\n", top, bottom, bpm);
 
     while (1)
     {
+        /* To count the number of beats in each measure */
         for (int i = 1; i <= top; i++)
         {
-            for (int j = 1; j <= (subdiv / 4); j++)
+            /* To handle the sub-divisions as inputted by the user */
+            for (int j = 1; j <= (sub_div / 4); j++)
             {
                 printf("%d ", i);
                 fflush(stdout);
-                usleep((60000 / bpm / (subdiv / 4)) * 1000);
+                nanosleep(&tim, &tim_rem);
             }
         }
     }
