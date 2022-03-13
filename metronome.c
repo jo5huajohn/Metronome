@@ -27,7 +27,7 @@ int8_t metronome(char *time_signature, uint16_t bpm, uint8_t sub_div);
 
 int main(int argc, char *argv[])
 {
-    char default_time_signature[] = "4/4";
+    char default_time_signature[] = DEFAULT_TIME_SIGNATURE;
     char *time_signature = default_time_signature;
     int8_t res = 0;
     uint8_t sub_div = DEFAULT_SUB_DIV;
