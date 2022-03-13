@@ -1,44 +1,76 @@
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
 
-void metronome(char *time_signature, int bpm, int sub_div);
+#define DEFAULT_BPM             60
+#define DEFAULT_SUB_DIV         4
+#define DEFAULT_TIME_SIGNATURE  "4/4"
+#define MAX_BPM                 400
+#define MAX_NO_OF_BEATS         16
+#define MAX_SUB_DIV             32
+#define MAX_VALUE_OF_BEATS      8
+#define ONE_MIN_IN_NANOSECS     6e10
+#define ONE_SEC_IN_NANOSECS     1e9
+#define SUB_DIV_DIVIDER         4
+
+int8_t metronome(char *time_signature, uint16_t bpm, uint8_t sub_div);
 
 int main(int argc, char *argv[])
 {
-    int sub_div = 4;
+    int8_t res = 0;
+    uint8_t sub_div = DEFAULT_SUB_DIV;
+    uint16_t bpm = DEFAULT_BPM;
+    char *time_signature = DEFAULT_TIME_SIGNATURE;
 
     if (argc == 4)
     {
         sub_div = atoi(argv[3]);
     }
 
-    int bpm = atoi(argv[2]);
-    
-    if (bpm > 400)
+    bpm = atoi(argv[2]);
+    time_signature = argv[1];
+
+    res = metronome(time_signature, bpm, sub_div);
+
+    return res;
+}
+
+int8_t metronome(char *time_signature, uint16_t bpm, uint8_t sub_div)
+{
+    if (bpm > MAX_BPM)
     {
         printf("BPM too high\n");
+
         return -1;
     }
 
-    metronome(argv[1], bpm, sub_div);
+    if (sub_div > MAX_SUB_DIV)
+    {
+        printf("Too many sub-divisions\n");
 
-    return 0;
-}
+        return -1;
+    }
 
-void metronome(char *time_signature, int bpm, int sub_div)
-{
-    int top = atoi(strtok(time_signature, "/"));
-    int bottom = atoi(strtok(NULL, "/"));
-    long tick = ((60000 / bpm / (sub_div / 4)) * 1000000);
+    uint8_t top = atoi(strtok(time_signature, "/"));
+    uint8_t bottom = atoi(strtok(NULL, "/"));
+
+    if ((top > MAX_NO_OF_BEATS) || (bottom > MAX_VALUE_OF_BEATS))
+    {
+        printf("Time signature is too high\n");
+
+        return -1;
+    }
+
+    uint32_t tick = ((ONE_MIN_IN_NANOSECS / bpm / (sub_div / SUB_DIV_DIVIDER)));
 
     struct timespec tim, tim_rem;
 
     memset(&tim, 0, sizeof(tim));
 
-    if (tick == 1000000000)
+    if (tick == ONE_SEC_IN_NANOSECS)
     {
         tim.tv_sec = 1;
     }
@@ -48,15 +80,15 @@ void metronome(char *time_signature, int bpm, int sub_div)
         tim.tv_nsec = tick;
     }
 
-    printf("%d/%d, BPM: %d\n", top, bottom, bpm);
+    printf("Time Signature: %d/%d, BPM: %d Sub-division: %d\n", top, bottom, bpm, sub_div);
 
     while (1)
     {
         /* To count the number of beats in each measure */
-        for (int i = 1; i <= top; i++)
+        for (uint8_t i = 1; i <= top; i++)
         {
             /* To handle the sub-divisions as inputted by the user */
-            for (int j = 1; j <= (sub_div / 4); j++)
+            for (uint8_t j = 1; j <= (sub_div / 4); j++)
             {
                 printf("%d ", i);
                 fflush(stdout);
@@ -64,4 +96,6 @@ void metronome(char *time_signature, int bpm, int sub_div)
             }
         }
     }
+
+    return 0;
 }
