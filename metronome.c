@@ -22,7 +22,9 @@
 
 #define ONE_MIN_IN_NANOSECS     6e10
 #define ONE_SEC_IN_NANOSECS     1e9
-#define SUB_DIV_DIVIDER         4
+
+#define BVC(s, v)               (s * ((v == 4) ? 1 : 2))
+#define TICK(b, s, v)           (ONE_MIN_IN_NANOSECS / (b * (s * ((v == 4) ? 1 : 2) / v)))
 
 typedef struct metronome {
     char *time_signature;
@@ -182,7 +184,7 @@ int8_t metronome(metronome_config_t *metronome_config)
         return -1;
     }
 
-    uint32_t tick = ((ONE_MIN_IN_NANOSECS / metronome_config->bpm / (metronome_config->sub_div / SUB_DIV_DIVIDER)));
+    uint32_t tick = TICK(metronome_config->bpm, metronome_config->sub_div, bottom);
 
     struct timespec tim, tim_rem;
 
@@ -199,7 +201,8 @@ int8_t metronome(metronome_config_t *metronome_config)
         tim.tv_nsec = tick;
     }
 
-    printf("Time Signature: %d/%d, BPM: %d Sub-division: %d\n", top, bottom, metronome_config->bpm, metronome_config->sub_div);
+    printf("Time Signature: %d/%d, BPM: %d Sub-division: %d\n", top, bottom, metronome_config->bpm, BVC(metronome_config->sub_div, bottom));
+    printf("Note: If the value of the beats (bottom number) is not 4, the sub-divisions will be changed internally to adhere to the value of beats.\n");
 
     while (1)
     {
